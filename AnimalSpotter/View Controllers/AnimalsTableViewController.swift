@@ -72,6 +72,12 @@ class AnimalsTableViewController: UITableViewController {
             // inject dependencies
             guard let loginVC = segue.destination as? LoginViewController else { return }
             loginVC.apiController = apiController
+        } else if segue.identifier == "ShowAnimalDetailSegue",
+            let animalDetailVC = segue.destination as? AnimalDetailViewController {
+            if let indexPath = tableView.indexPathForSelectedRow {
+                animalDetailVC.animalName = animalNames[indexPath.row]
+            }
+            animalDetailVC.apiController = apiController
         }
     }
 }

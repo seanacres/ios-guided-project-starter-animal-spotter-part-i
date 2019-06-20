@@ -147,15 +147,15 @@ class APIController {
         }.resume()
     }
     
-    // create function to fetch image
-    func fetchDetails(for animalName: String, completion: @escaping (Result<[String], NetworkError>) -> ()) {
+    // create function to fetch details
+    func fetchDetails(for animalName: String, completion: @escaping (Result<Animal, NetworkError>) -> ()) {
         guard let bearer = bearer else {
             completion(.failure(.noAuth))
             return
         }
         
-        let allAnimalsURL = baseUrl.appendingPathComponent("animals/animalName")
-        var request = URLRequest(url: allAnimalsURL)
+        let animalURL = baseUrl.appendingPathComponent("animals/\(animalName)")
+        var request = URLRequest(url: animalURL)
         request.httpMethod = HTTPMethod.get.rawValue
         request.addValue("Bearer \(bearer.token)", forHTTPHeaderField: "Authorization")
         
@@ -177,12 +177,37 @@ class APIController {
             }
             
             let jsonDecoder = JSONDecoder()
+            jsonDecoder.dateDecodingStrategy = .secondsSince1970
             do {
-                let animalNames = try jsonDecoder.decode([String].self, from: data)
-                completion(.success(animalNames))
+                let animal = try jsonDecoder.decode(Animal.self, from: data)
+                completion(.success(animal))
             } catch {
                 completion(.failure(.noDecode))
             }
             }.resume()
     }
+    
+    //create function to fetch image
+    func fetchImage(at urlString: String, completion: @escaping (Result<UIImage, NetworkError>) -> ()) {
+        let imageURL = URL(string: urlString)!
+        
+        var request = URLRequest(url: imageURL)
+        request.httpMethod = HTTPMethod.get.rawValue
+        
+        URLSession.shared.dataTask(with: request) { (data, _, error) in
+            if let _ = error {
+                completion(.failure(.otherError))
+                return
+            }
+            
+            guard let data = data else {
+                completion(.failure(.badData))
+                return
+            }
+            
+            let image = UIImage(data: data)!
+            completion(.success(image))
+        }.resume()
+    }
+    
 }
